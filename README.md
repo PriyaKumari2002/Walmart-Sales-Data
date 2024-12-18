@@ -1,7 +1,6 @@
 # Walmart-Sales-Data
 
-**Project Overview**
-This project is an end-to-end data analysis solution designed to extract critical business insights from Walmart sales data. We utilize Python for data processing and analysis, SQL for advanced querying, and structured problem-solving techniques to solve key business questions. The project is ideal for data analysts looking to develop skills in data manipulation, SQL querying, and data pipeline creation.
+**Project Overview** This project is an end-to-end data analysis solution designed to extract critical business insights from Walmart sales data. We utilize Python for data processing and analysis, SQL for advanced querying, and structured problem-solving techniques to solve key business questions. The project is ideal for data analysts looking to develop skills in data manipulation, SQL querying, and data pipeline creation.
 
 ---
 
@@ -59,19 +58,163 @@ This project is an end-to-end data analysis solution designed to extract critica
 
 ### **9. SQL Analysis: Complex Queries and Business Problem Solving**
 
-- **Business Problem-Solving**: Write and execute complex SQL queries to answer critical business questions, such as:
-  - Revenue trends across branches and categories.
-  - Identifying best-selling product categories.
-  - Sales performance by time, city, and payment method.
-  - Analyzing peak sales periods and customer buying patterns.
-  - Profit margin analysis by branch and category.
+- **Business Problem-Solving**: Write and execute complex SQL queries to answer critical business questions. Below are the SQL queries used in this project:
+
+#### **SQL Queries**
+```sql
+-- Business Problems
+-- Q1: Find payment methods with all the transactions and quantity sold
+SELECT 
+    payment_method,
+    COUNT(*) AS total_payments,
+    SUM(quantity) AS qty_sold
+FROM walmart
+GROUP BY payment_method;
+
+-- Q2: Identify the highest-rated category in each branch, displaying the branch, category, and average rating
+WITH AvgRatings AS (
+    SELECT
+        Branch,
+        category,
+        AVG(rating) AS avg_rating
+    FROM walmart
+    GROUP BY Branch, category
+)
+SELECT 
+    Branch,
+    category,
+    avg_rating
+FROM (
+    SELECT 
+        Branch,
+        category,
+        avg_rating,
+        RANK() OVER (PARTITION BY Branch ORDER BY avg_rating DESC) AS `rank`
+    FROM AvgRatings
+) RankedRatings
+WHERE `rank` = 1;
+
+-- Q3: Identify the business day for each branch based on the number of transactions
+WITH PreAggregatedData AS (
+    SELECT 
+        Branch,
+        DAYNAME(STR_TO_DATE(`date`, '%d/%m/%y')) AS day_name,
+        COUNT(*) AS num_transactions
+    FROM walmart
+    GROUP BY Branch, day_name
+),
+RankedData AS (
+    SELECT 
+        Branch,
+        day_name,
+        num_transactions,
+        RANK() OVER (PARTITION BY Branch ORDER BY num_transactions DESC) AS `rank`
+    FROM PreAggregatedData
+)
+SELECT *
+FROM RankedData
+WHERE `rank` = 1;
+
+-- Q4: Calculate the total quantity of items sold per payment method
+SELECT 
+    payment_method,
+    SUM(quantity) AS no_qty_sold
+FROM walmart
+GROUP BY payment_method;
+
+-- Q5: Determine the average, minimum, and maximum rating of category products for each city
+SELECT 
+    city,
+    category,
+    MIN(rating) AS min_rating,
+    MAX(rating) AS max_rating,
+    AVG(rating) AS avg_rating
+FROM walmart
+GROUP BY city, category;
+
+-- Q6: Calculate the total profit for each category
+SELECT
+    category,
+    SUM(total) AS total_revenue,
+    SUM(total * profit_margin) AS profit
+FROM walmart
+GROUP BY category;
+
+-- Q7: Determine the most common payment method for each branch
+WITH cte AS (
+    SELECT
+        Branch,
+        payment_method,
+        COUNT(*) AS total_trans,
+        RANK() OVER (PARTITION BY Branch ORDER BY COUNT(*) DESC) AS `rank`
+    FROM walmart
+    GROUP BY Branch, payment_method
+)
+SELECT * 
+FROM cte
+WHERE `rank` = 1;
+
+-- Q8: Categorize sales into morning, afternoon, and evening shifts
+SELECT 
+    Branch,
+    CASE 
+        WHEN EXTRACT(HOUR FROM TIME(time)) < 12 THEN 'morning'
+        WHEN EXTRACT(HOUR FROM TIME(time)) BETWEEN 12 AND 17 THEN 'afternoon'
+        ELSE 'evening'
+    END AS day_time,
+    COUNT(*) AS transaction_count
+FROM walmart
+GROUP BY Branch, day_time
+ORDER BY Branch, day_time DESC;
+
+-- Q9: Identify the 5 branches with the highest revenue decrease ratio (RDR)
+WITH RevenueData AS (
+    SELECT 
+        Branch,
+        YEAR(STR_TO_DATE(`date`, '%d/%m/%Y')) AS year,
+        SUM(total) AS total_revenue
+    FROM walmart
+    WHERE YEAR(STR_TO_DATE(`date`, '%d/%m/%Y')) IN (2022, 2023)
+    GROUP BY Branch, year
+),
+RevenueComparison AS (
+    SELECT 
+        r2022.Branch,
+        r2022.total_revenue AS last_year_revenue,
+        r2023.total_revenue AS current_year_revenue,
+        ROUND(((r2022.total_revenue - r2023.total_revenue) / r2022.total_revenue) * 100, 2) AS rdr
+    FROM RevenueData r2022
+    JOIN RevenueData r2023
+        ON r2022.Branch = r2023.Branch
+    WHERE r2022.year = 2022 AND r2023.year = 2023
+),
+RankedBranches AS (
+    SELECT 
+        Branch,
+        last_year_revenue,
+        current_year_revenue,
+        rdr,
+        RANK() OVER (ORDER BY rdr DESC) AS `rank`
+    FROM RevenueComparison
+)
+SELECT 
+    Branch,
+    ROUND(last_year_revenue, 2) AS last_year_revenue,
+    ROUND(current_year_revenue, 2) AS current_year_revenue,
+    rdr
+FROM RankedBranches
+WHERE `rank` <= 5
+ORDER BY rdr DESC;
+```
+
 - **Documentation**: Keep clear notes of each query's objective, approach, and results.
 
 ### **10. Project Publishing and Documentation**
 
-- **Documentation**: Maintain well-structured documentation of the entire process in a Jupyter Notebook.
-- **Project Publishing**: Publish the completed project on GitHub including:
+- **Documentation**: Maintain well-structured documentation of the entire process in Markdown or a Jupyter Notebook.
+- **Project Publishing**: Publish the completed project on GitHub or any other version control platform, including:
   - The `README.md` file (this document).
+  - Jupyter Notebooks (if applicable).
   - SQL query scripts.
   - Data files (if possible) or steps to access them.
 
@@ -113,28 +256,22 @@ This project is an end-to-end data analysis solution designed to extract critica
 ```
 
 ---
-
 ## **Results and Insights**
-
 This section will include your analysis findings:
 
-- **Sales Insights**: Key categories, branches with highest sales, and preferred payment methods.
-- **Profitability**: Insights into the most profitable product categories and locations.
-- **Customer Behavior**: Trends in ratings, payment preferences, and peak shopping hours.
+**Sales Insights:** Key categories, branches with highest sales, and preferred payment methods.
+**Profitability:** Insights into the most profitable product categories and locations.
+**Customer Behavior:** Trends in ratings, payment preferences, and peak shopping hours.
 
 ---
-
 ## **Future Enhancements**
-
 Possible extensions to this project:
-
-- Integration with a dashboard tool (e.g., Power BI or Tableau) for interactive visualization.
-- Additional data sources to enhance analysis depth.
-- Automation of the data pipeline for real-time data ingestion and analysis.
+--Integration with a dashboard tool (e.g., Power BI or Tableau) for interactive visualization.
+--Additional data sources to enhance analysis depth.
+--Automation of the data pipeline for real-time data ingestion and analysis.
 
 ---
 ## **Acknowledgments**
-
-- **Data Source**: Kaggle’s Walmart Sales Dataset
-- **Inspiration**: Walmart’s business case studies on sales and supply chain optimization.
+**Data Source:** Kaggle’s Walmart Sales Dataset
+**Inspiration:** Walmart’s business case studies on sales and supply chain optimization.
 
