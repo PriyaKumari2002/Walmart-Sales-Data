@@ -58,20 +58,21 @@
 
 ### **9. SQL Analysis: Complex Queries and Business Problem Solving**
 
-- **Business Problem-Solving**: Write and execute complex SQL queries to answer critical business questions. Below are the SQL queries used in this project:
+This section outlines key business questions and the SQL queries used to answer them. Each query is accompanied by a brief description to help understand the insights derived.
 
-#### **SQL Queries**
+#### **Q1: Find payment methods with all the transactions and quantity sold**
 ```sql
--- Business Problems
--- Q1: Find payment methods with all the transactions and quantity sold
 SELECT 
     payment_method,
     COUNT(*) AS total_payments,
     SUM(quantity) AS qty_sold
 FROM walmart
 GROUP BY payment_method;
+```
 
--- Q2: Identify the highest-rated category in each branch, displaying the branch, category, and average rating
+#### **Q2: Identify the highest-rated category in each branch**
+*Displays the branch, category, and average rating.*
+```sql
 WITH AvgRatings AS (
     SELECT
         Branch,
@@ -93,8 +94,10 @@ FROM (
     FROM AvgRatings
 ) RankedRatings
 WHERE `rank` = 1;
+```
 
--- Q3: Identify the business day for each branch based on the number of transactions
+#### **Q3: Identify the business day for each branch based on the number of transactions**
+```sql
 WITH PreAggregatedData AS (
     SELECT 
         Branch,
@@ -114,15 +117,19 @@ RankedData AS (
 SELECT *
 FROM RankedData
 WHERE `rank` = 1;
+```
 
--- Q4: Calculate the total quantity of items sold per payment method
+#### **Q4: Calculate the total quantity of items sold per payment method**
+```sql
 SELECT 
     payment_method,
     SUM(quantity) AS no_qty_sold
 FROM walmart
 GROUP BY payment_method;
+```
 
--- Q5: Determine the average, minimum, and maximum rating of category products for each city
+#### **Q5: Determine the average, minimum, and maximum rating of category products for each city**
+```sql
 SELECT 
     city,
     category,
@@ -131,16 +138,20 @@ SELECT
     AVG(rating) AS avg_rating
 FROM walmart
 GROUP BY city, category;
+```
 
--- Q6: Calculate the total profit for each category
+#### **Q6: Calculate the total profit for each category**
+```sql
 SELECT
     category,
     SUM(total) AS total_revenue,
     SUM(total * profit_margin) AS profit
 FROM walmart
 GROUP BY category;
+```
 
--- Q7: Determine the most common payment method for each branch
+#### **Q7: Determine the most common payment method for each branch**
+```sql
 WITH cte AS (
     SELECT
         Branch,
@@ -153,8 +164,10 @@ WITH cte AS (
 SELECT * 
 FROM cte
 WHERE `rank` = 1;
+```
 
--- Q8: Categorize sales into morning, afternoon, and evening shifts
+#### **Q8: Categorize sales into morning, afternoon, and evening shifts**
+```sql
 SELECT 
     Branch,
     CASE 
@@ -166,8 +179,10 @@ SELECT
 FROM walmart
 GROUP BY Branch, day_time
 ORDER BY Branch, day_time DESC;
+```
 
--- Q9: Identify the 5 branches with the highest revenue decrease ratio (RDR)
+#### **Q9: Identify the 5 branches with the highest revenue decrease ratio (RDR)**
+```sql
 WITH RevenueData AS (
     SELECT 
         Branch,
@@ -207,7 +222,7 @@ WHERE `rank` <= 5
 ORDER BY rdr DESC;
 ```
 
-- **Documentation**: Keep clear notes of each query's objective, approach, and results.
+---
 
 ### **10. Project Publishing and Documentation**
 
@@ -216,7 +231,6 @@ ORDER BY rdr DESC;
   - The `README.md` file (this document).
   - Jupyter Notebooks (if applicable).
   - SQL query scripts.
-  - Data files (if possible) or steps to access them.
 
 ---
 
