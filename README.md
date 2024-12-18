@@ -58,7 +58,7 @@
 
 ### **9. SQL Analysis: Complex Queries and Business Problem Solving**
 
-This section outlines key business questions and the SQL queries used to answer them. Each query is accompanied by a brief description to help understand the insights derived.
+This section outlines key business questions and the SQL queries used to answer them. Each query will help to understand and derived the insights .
 
 #### **Q1: Find payment methods with all the transactions and quantity sold**
 ```sql
